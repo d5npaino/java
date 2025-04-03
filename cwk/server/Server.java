@@ -4,6 +4,7 @@ import java.util.concurrent.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.text.SimpleDateFormat;
+import java.util.stream.Collectors;
 
 public class Server {
     private static ExecutorService executor;
@@ -38,9 +39,11 @@ public class Server {
 
     private static class ClientThread extends Thread {
         private Socket socket;
+
         public ClientThread(Socket socket) {
             this.socket = socket;
         }
+
         @Override
         public void run() {
             if (activeClients.get() >= clients) {
@@ -84,7 +87,7 @@ public class Server {
                 case "list":
                     logRecorded(clientIp, "list");
                     return votes.entrySet().stream()
-                            .map(entry -> entry.getKey() + " " + entry.getValue().get())
+                            .map(entry -> "'" + entry.getKey() + "' has " + entry.getValue().get() + " vote(s)")
                             .collect(Collectors.joining("\n")); // used chatgpt to help me with this
                 case "vote":
                     if (parts.length != 2)
@@ -111,11 +114,9 @@ public class Server {
                 BufferedWriter bufferWriter = new BufferedWriter(new FileWriter(file, true));
                 bufferWriter.write(timestamp + "|" + clientIp + "|" + requestType);
                 bufferWriter.newLine();
+                bufferWriter.close();
             } catch (IOException e) {
                 System.out.println("# ERROR : Logging Error #~");
-                return;
-            } finally {
-                bufferWriter.close();
                 return;
             }
         }
